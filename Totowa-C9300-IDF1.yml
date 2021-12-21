@@ -1,0 +1,42 @@
+---
+
+Stack_Size: 2
+
+Hostname: 225TOT-BLDA-C9300-IDF1-1FL
+Location: 225 Minnisick Rd. Building A Totowa NJ
+
+Mgmt_Name: Management
+Mgmt_ID: 254
+Mgmt_Address: 10.70.254.254
+Mgmt_Mask: 255.255.255.255
+Mgmt_Gateway: 10.70.254.1
+
+Vlan_List:
+  - Data:
+      ID: 101
+      Name: IDF1_Data
+  - Voice:
+      ID: 102
+      Name: IDF1_Voice
+  - Security:
+      ID: 103
+      Name: IDF1_Security
+  - Specialty:
+      ID: 1201
+      Name: IDF1_Specialty
+  - AP_Mgmt:
+      ID: 601
+      Name: IDF1_AP_MGMT
+  - DeadEnd:
+      ID: 911
+      Name: NAC_DEAD_END
+  - Native:
+      ID: 996
+      Name: Native_VLAN
+    
+SNMP_RO: Hj$S3cur3D!Stg
+SNMP_RW: NagS3cur3d
+
+
+
+

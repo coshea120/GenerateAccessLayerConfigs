@@ -1,0 +1,47 @@
+---
+
+Stack_Size: 2
+
+Hostname: 234WN-C9200-S201-2FL-SWA
+Location: 234 Hamburg Tpke. Wayne NJ, 07470
+
+Mgmt_Name: 234WN-2FL_AP-MGMT
+Mgmt_ID: 610
+Mgmt_Address: 10.60.120.6
+Mgmt_Mask: 255.255.255.255
+Mgmt_Gateway: 10.60.120.1
+
+Port_Channel_Group: 111
+Port_Channel_Mode: active
+Port_Channel_Member_Interfaces:
+    - TenGigabitEthernet1/1/1
+    - TenGigabitEthernet2/1/1
+
+Native_VLAN_ID: 996
+
+Vlan_List:
+  - ID: 611
+    Description: 234WN-2FL_WIRED
+    Name: 234WN-2FL_WIRED
+  - ID: 612
+    Description: 234WN-2FL_VOICE
+    Name: 234WN-2FL_VOICE
+  - ID: 613
+    Description: 234WN-2FL_VIDEO
+    Name: 234WN-2FL_VIDEO
+  - ID: 614
+    Description: 234WN-2FL_SECURITY
+    Name: 234WN-2FL_SECURITY
+  - ID: 615
+    Description: 234WN-2FL_SPECIALTY
+    Name: 234WN-2FL_SPECIALTY
+  - ID: 616
+    Description: 234WN-2FL_AP_MGMT
+    Name: SITE_AP_MGMT
+  - ID: 911
+    Description: Dead End VLAN
+    Name: NAC_DEAD_END
+
+
+SNMP_RO: Hj$S3cur3D!Stg
+SNMP_RW: NagS3cur3d

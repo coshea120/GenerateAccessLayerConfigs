@@ -1,0 +1,230 @@
+enable
+{% for i in range(1, Stack_Size + 1) %}
+{% set prio = 16 - i %}
+switch {{ i }} priority {{ prio }}
+{% endfor %}
+conf t
+no service pad
+service tcp-keepalives-in
+service tcp-keepalives-out
+service timestamps debug datetime msec localtime show-timezone
+service timestamps log datetime msec localtime show-timezone
+service password-encryption
+service sequence-numbers
+service call-home
+no platform punt-keepalive disable-kernel-core
+hostname {{ Hostname }}
+
+
+no ip source-route
+ip name-server 10.120.99.242 10.120.99.243
+ip domain name sjhmc.org
+crypto key generate rsa mod 2048
+
+
+
+
+
+ip ssh ver 2
+aaa new-model
+aaa group server tacacs+ ISE-TACPLUS
+ server name sjtac02
+ server name sjtac01
+ ip tacacs source-interface vlan{{ Mgmt_ID }}
+ exit
+vrf definition Mgmt-vrf
+ address-family ipv4
+ exit-address-family
+ address-family ipv6
+ exit-address-family
+exit
+enable secret 5 $1$lYPc$vMTv9cSndemom63EknWxk0
+clock timezone EST -5 0
+clock summer-time EST-DST recurring
+vtp domain sjhmc
+vtp mode off
+login block-for 300 attempts 5 within 60
+login delay 1
+login quiet-mode access-class allowed_login
+login on-failure log
+no login on-success log
+udld enable
+spanning-tree mode rapid-pvst
+spanning-tree loopguard default
+spanning-tree portfast default
+spanning-tree portfast bpduguard default
+spanning-tree extend system-id
+spanning-tree vlan 1-4094 priority 61440
+errdisable recovery cause bpduguard
+errdisable recovery cause security-violation
+errdisable recovery cause link-flap
+errdisable recovery cause inline-power
+errdisable recovery cause loopback
+errdisable recovery interval 3600
+username SJADMIN privilege 15 secret 5 $1$8ZK2$7S9B7wgHMLDAyf1Zf91i71
+{% for vlan in Vlan_List -%}
+vlan {{ vlan.ID }}
+ name {{ vlan.Name }}
+{% endfor -%}
+vlan {{ Mgmt_ID }}
+ name {{ Mgmt_Name }}
+ exit
+{% for vlan in Vlan_List -%}
+int vlan{{ vlan.ID }}
+ ip address {{ vlan.Name }}
+{% endfor -%}
+
+!!!! interface GigabitEthernet0/0
+!!!! vrf forwarding Mgmt-vrf
+!!!! no ip address
+!!!! shutdown
+!!!! negotiation auto
+{% for i in range(1, Stack_Size + 1) %}
+interface range GigabitEthernet{{i}}/0/1-48
+ switchport access vlan 911
+ switchport mode access
+ switchport nonegotiate
+ snmp trap mac-notification change added
+ snmp trap mac-notification change removed
+ spanning-tree portfast
+ shutdown
+ exit
+interface range GigabitEthernet{{i}}/1/1-4
+ switchport access vlan 911
+ switchport mode access
+ switchport nonegotiate
+ snmp trap mac-notification change added
+ snmp trap mac-notification change removed
+ spanning-tree portfast
+ shutdown
+ exit
+interface range TenGigabitEthernet{{i}}/1/1-8
+ shutdown
+ exit
+interface range FortyGigabitEthernet{{i}}/1/1-2
+ shutdown
+ exit
+interface range TwentyFiveGigE{{i}}/1/1-2
+ shutdown
+ exit
+interface AppGigabitEthernet{{i}}/0/1
+ shutdown
+ exit
+{% endfor %}
+interface Vlan1
+ no ip address
+ shutdown
+interface Vlan{{ Mgmt_ID }}
+ ip address {{ Mgmt_Address }} {{ Mgmt_Mask }}
+ exit
+ip default-gateway {{ Mgmt_Gateway }}
+ip forward-protocol nd
+no ip http server
+ip http authentication local
+no ip http secure-server
+ip ssh time-out 60
+ip ssh authentication-retries 5
+ip ssh version 2
+ip scp server enable
+ip access-list standard Security_SNMP
+ remark Permitted SNMP from subnets
+ permit 10.14.12.20
+ permit 10.120.92.20
+ permit 10.14.11.98
+ permit 10.120.92.152
+ deny   any log
+ exit
+ip access-list standard Security_VTY
+ remark Permitted VTY from subnets
+ permit 10.0.0.0 0.255.255.255
+ permit 172.16.0.0 0.15.255.255
+ deny   any log
+ exit
+ip access-list standard allowed_login
+ remark Permitted login from subnets
+ permit 10.0.0.0 0.255.255.255
+ permit 172.16.0.0 0.15.255.255
+ deny   any log
+ exit
+logging origin-id ip
+logging source-interface vlan{{ Mgmt_ID }}
+logging host 10.14.11.98
+logging host 10.120.99.105
+
+snmp-server community {{ SNMP_RO }} RO Security_SNMP
+snmp-server community {{ SNMP_RW }} RW Security_SNMP
+snmp-server location {{ Location }}
+snmp-server enable traps mac-notification change move threshold
+snmp-server host 10.120.92.20 version 2c {{ SNMP_RW }}  mac-notification snmp
+snmp-server host 10.14.12.20 version 2c {{ SNMP_RW }}  mac-notification snmp
+snmp-server host 10.120.92.152 version 2c {{ SNMP_RO }}
+snmp ifmib ifindex persist
+tacacs-server host 10.14.11.100
+tacacs-server key 7 074B625F44011406464058
+tacacs-server host 10.120.92.100
+tacacs-server key 7 074B625F44011406464058
+
+banner motd ^C
+*********************************************************
+* Network Access WARNING                                *
+* This system is privately owned. If you are not        *
+* authorized to access this system, exit immediately.   *
+* Unauthorized access to this system is forbidden by    *
+* Hospital policies, national, and international laws.  *
+* Unauthorized users are subject to criminal and civil  *
+* penalties as well as Hospital initiated disciplinary  *
+* proceedings.                                          *
+*                                                       *
+* By entry into this system you acknowledge that you    *
+* are authorized access and the level of privilege you  *
+* subsequently execute on this system. You further      *
+* acknowledge that by entry into this system you        *
+* expect no privacy from monitoring and consent to      *
+* logging for analysis.                                 *
+*********************************************************
+^C
+line con 0
+ stopbits 1
+ exit
+line vty 0 4
+ session-timeout 15
+ access-class Security_VTY in
+ exec-timeout 15 0
+ privilege level 15
+ logging synchronous
+ length 0
+ transport input ssh
+ exit
+line vty 5 15
+ session-timeout 15
+ access-class Security_VTY in
+ exec-timeout 15 0
+ privilege level 15
+ logging synchronous
+ length 0
+ transport input ssh
+ exit
+ntp source vlan {{ Mgmt_ID }}
+ntp server 10.120.99.240 prefer
+ntp server 10.120.99.241
+mac address-table notification change
+mac address-table aging-time 1800 vlan {{ Mgmt_ID }}
+aaa authentication login default group ISE-TACPLUS local
+aaa authentication enable default group ISE-TACPLUS enable
+aaa authorization exec default group ISE-TACPLUS local
+aaa authorization commands 1 default group ISE-TACPLUS local
+aaa authorization commands 15 default group ISE-TACPLUS local
+aaa accounting exec default start-stop group ISE-TACPLUS
+aaa accounting commands 1 default start-stop group ISE-TACPLUS
+aaa accounting commands 7 default start-stop group ISE-TACPLUS
+aaa accounting commands 15 default start-stop group ISE-TACPLUS
+aaa session-id common
+aaa authorization config-commands
+end
+copy running-config startup-config
+startup-config
+
+
+
+
+
